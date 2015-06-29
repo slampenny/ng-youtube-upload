@@ -1,0 +1,74 @@
+<div class="post-sign-in">
+    <div>
+        <img id="channel-thumbnail">
+        <span id="channel-name"></span>
+    </div>
+
+    <div data-ng-show="showTitle">
+        <label for="title">Title:</label>
+        <input id="title" type="text" data-ng-model="title">
+    </div>
+    <div data-ng-show="showDescription">
+        <label for="description">Description:</label>
+        <textarea id="description" data-ng-model="description"></textarea>
+    </div>
+    <div data-ng-show="showPrivacy">
+        <label for="privacy-status">Privacy Status:</label>
+        <select id="privacy-status">
+            <option>public</option>
+            <option>unlisted</option>
+            <option>private</option>
+        </select>
+    </div>
+
+    <div>
+        <div class='row' style="padding-top: 15px;">
+            <div class ='col-md-12'>
+                <div class="form-group drop-box"
+                     ngf-drop
+                     data-ng-model="videoFile"
+                     ngf-accept="'video/*'"
+                     ngf-drag-over-class="dragover"
+                        >
+                    <h4>{{videoTitle}}</h4>
+                    <p>Choose a video from your computer: .MOV, .MPEG4, MP4, .AVI, .WMV, .MPEGPS, .FLV, 3GPP, WebM</p>
+                </div>
+                <div ngf-no-file-drop>File Drag/drop is not supported</div>
+            </div>
+        </div>
+
+        <div class="btn-group-vertical">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <span class="btn btn-primary btn-file">
+                       <span class="glyphicon glyphicon-folder-open"></span> Browse <input type="file" id="file" class="file" accept="video/*" ngf-select data-ng-model="videoFile">
+                    </span>
+                </span>
+                <input type="text" class="form-control" readonly value="{{videoName}}">
+            </div>
+            <button type="button" id="uploadButton" class="btn btn-success"><span class="glyphicon glyphicon-upload"></span> Upload Video</button>
+        </div>
+
+        <div class="during-upload">
+            <div class="progress">
+                <div id="transferred" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{progress.percentTransferred}}"
+                     aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                    {{progress.percentTransferred}}% Complete (success)
+                </div>
+            </div>
+
+            <div align="center" class="embed-responsive embed-responsive-16by9">
+                <video controls ngf-src="videoFile[0]" ngf-accept="'video/*'"></video>
+            </div>
+        </div>
+        <p><small id="disclaimer">* By uploading a video, you certify that you own all rights to the content or that you are
+            authorized by the owner to make the content publicly available on YouTube, and that it otherwise complies
+            with the YouTube Terms of Service located at <a href="http://www.youtube.com/t/terms" target="_blank">http://www.youtube.com/t/terms</a>
+        </small></p>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//apis.google.com/js/client:plusone.js"></script>
+    <script src="../js/youtubeVideo/app/cors_upload.js"></script>
+    <script src="js/bower_components/ng-file-upload/ng-file-upload-all.js"></script>
+</div>

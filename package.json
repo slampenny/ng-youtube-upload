@@ -1,0 +1,37 @@
+{
+  "name": "youtube-upload-angular",
+  "version": "0.1.0",
+  "description": "An Angular wrapper on the YouTube Upload Widget",
+  "main": "app/youtube_upload.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/localmotors/youtube-upload-angular.git"
+  },
+  "keywords": [
+    "YouTube",
+    "Upload",
+    "Widget",
+    "Angular",
+    "YouTube",
+    "Upload"
+  ],
+  "author": "Local Motors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/localmotors/youtube-upload-angular/issues"
+  },
+  "homepage": "https://github.com/localmotors/youtube-upload-angular",
+  "devDependencies": {
+    "gulp-clean": "~0.2.4",
+    "gulp-jshint": "~1.5.0",
+    "gulp": "~3.5.5",
+    "mocha": "~1.17.1",
+    "gulp-mocha": "~0.4.1",
+    "jsdom": "~0.10.1",
+    "gulp-uglify": "~0.2.1",
+    "gulp-concat": "~2.1.7"
+  }
+}

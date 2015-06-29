@@ -1,0 +1,19 @@
+{
+  "name": "youtube-video-angular",
+  "version": "0.1.0",
+  "homepage": "https://github.com/slampenny/youtube-video-angular",
+  "authors": [
+    "Jordan Lapp"
+  ],
+  "dependencies": {
+    "ng-file-upload": "~5.0.3"
+  },
+  "description": "An Angular wrapper for uploading videos to YouTube using API v3",
+  "main": "app/youtube_upload.js",
+  "keywords": [
+    "Angular",
+    "YouTube",
+    "Upload"
+  ],
+  "license": "MIT"
+}
