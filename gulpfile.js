@@ -1,10 +1,9 @@
 var gulp = require('gulp');
 
 var clean = require('gulp-clean');
-var jshint = require('gulp-jshint');
+/*var jshint = require('gulp-jshint');
 var uglify = require('gulp-uglify');
-var concat = require('gulp-concat');
-var mocha = require('gulp-mocha');
+var concat = require('gulp-concat');*/
 
 var bases = {
     app: 'app/',
@@ -23,7 +22,7 @@ gulp.task('clean', function() {
 });
 
 
-gulp.task('scripts', function() {
+/*gulp.task('scripts', function() {
     return gulp.src(paths.scripts)
         .pipe(jshint())
         .pipe(jshint.reporter('default'))
@@ -36,7 +35,7 @@ gulp.task('copy', function() {
     // copy html
     gulp.src(paths.html)
         .pipe(gulp.dest(bases.dist));
-});
+});*/
 
-gulp.task('default', ['clean', 'scripts', 'copy']);
+gulp.task('default', ['clean'/*, 'scripts', 'copy'*/]);
 

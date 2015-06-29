@@ -1,35 +1,28 @@
 {
-  "name": "youtube-upload-angular",
+  "name": "ng-youtube-upload",
   "version": "0.1.0",
-  "description": "An Angular wrapper on the YouTube Upload Widget",
-  "main": "app/youtube_upload.js",
-  "scripts": {
-    "test": "mocha"
-  },
+  "description": "An Angular wrapper on the YouTube Upload API v3",
+  "main": "app/upload_video.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/localmotors/youtube-upload-angular.git"
+    "url": "git://github.com/slampenny/ng-youtube-upload.git"
   },
   "keywords": [
     "YouTube",
     "Upload",
-    "Widget",
     "Angular",
-    "YouTube",
-    "Upload"
+    "v3"
   ],
-  "author": "Local Motors",
+  "author": "Jordan Lapp",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/localmotors/youtube-upload-angular/issues"
+    "url": "https://github.com/slampenny/ng-youtube-upload/issues"
   },
-  "homepage": "https://github.com/localmotors/youtube-upload-angular",
+  "homepage": "https://github.com/slampenny/ng-youtube-upload",
   "devDependencies": {
     "gulp-clean": "~0.2.4",
     "gulp-jshint": "~1.5.0",
     "gulp": "~3.5.5",
-    "mocha": "~1.17.1",
-    "gulp-mocha": "~0.4.1",
     "jsdom": "~0.10.1",
     "gulp-uglify": "~0.2.1",
     "gulp-concat": "~2.1.7"
