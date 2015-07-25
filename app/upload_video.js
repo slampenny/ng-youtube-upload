@@ -2,9 +2,11 @@
 * Youtube Upload Directive -
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 angular.module('youtubeVideo', [
-    'ngFileUpload'
+    'ngAnimate',
+    'ngFileUpload',
+    'mgcrea.ngStrap'
     ])
-    .run(['$window','$rootScope',function($window, $rootScope) {
+    .run(['$window','$rootScope', function($window, $rootScope) {
 
         if( !angular.element('link#youtubeVideoCSS').length){
             angular.element('head').append('<link id="youtubeVideoCSS" href="../js/youtubeVideo/app/upload_video.css" rel="stylesheet">');
@@ -19,12 +21,16 @@ angular.module('youtubeVideo', [
         };
 
     }])
-    .directive('youtubeVideoUpload', ['$window', function($window) {
+    .directive('youtubeVideoUpload', ['$window', '$alert', function($window, $alert) {
 	'use strict';
 
     return {
         restrict: 'AE',
         templateUrl: '../js/youtubeVideo/app/upload_video.html',
+        scope: {
+            videoTitle: "@",
+            videoDesc : "@"
+        },
         link: function($scope, $element, $attrs) {
 
             var STATUS_POLLING_INTERVAL_MILLIS = 10 * 1000; // One minute.
@@ -77,14 +83,9 @@ angular.module('youtubeVideo', [
                 height: 'standard',
                 width: 'wide',
                 state: '',
-                showtitle: false,
-                showdescription: false,
                 showprivacy: false,
                 videoTitle: "Upload a Video",
-                clientid: "YOUR CLIENT ID HERE",
-
-                title: "My Default Title",
-                description: "My Default Descripton"
+                clientid: "YOUR CLIENT ID HERE"
             };
 
             defaults.clientid = $attrs.clientid;
@@ -97,17 +98,23 @@ angular.module('youtubeVideo', [
                 }
             });
 
-            $scope.title = defaults["title"];
-            $scope.desc = defaults["description"];
-
             $scope.videoFile = null;
             $scope.videoName = "";
 
-            $scope.$watch('videoFile', function() {
-                if (($scope.videoFile) && ($scope.videoFile.length > 0)) {
-                    $scope.videoName = $scope.videoFile[0].name;
+            $scope.$watch('videoFiles', function() {
+                if (($scope.videoFiles) && ($scope.videoFiles.length > 0)) {
+                    $scope.videoFile = $scope.videoFiles[0];
+                    $scope.videoName = $scope.videoFiles[0].name;
                 }
             });
+
+            $scope.fileNameChanged = function(elem) {
+                $scope.videoFile = elem.files[0];
+                $scope.videoName = elem.files[0].name;
+                $scope.$apply();
+                $('#uploadButton').attr('disabled', false);
+            };
+
 
             // Default language
             // Supported languages: https://developers.google.com/+/web/api/supported-languages
@@ -132,22 +139,6 @@ angular.module('youtubeVideo', [
 
                 gapi.signin.render(anchor, defaults);
             };
-
-            $scope.$on('event:google-plus-signin-success', function (event,authResult) {
-                $('#signInButton').hide();
-                if(authResult.access_token) {
-                    var uploadVideo = new UploadVideo();
-                    uploadVideo.ready(authResult.access_token);
-                }
-            });
-
-            $scope.$on('event:change-title', function (event, data) {
-                $scope.title = data;
-            });
-
-            $scope.$on('event:change-description', function (event, data) {
-                $scope.desc = data;
-            });
 
             $scope.$on('event:google-plus-signin-success', function (event,authResult) {
                 $('#signInButton').hide();
@@ -229,19 +220,19 @@ angular.module('youtubeVideo', [
             UploadVideo.prototype.uploadFile = function(file) {
                 var metadata = {
                     snippet: {
-                        title: $scope.title,
-                        description: $scope.desc,
+                        title: $scope.videoTitle,
+                        description: $scope.videoDesc,
                         tags: this.tags,
                         categoryId: this.categoryId
                     },
                     status: {
-                        privacyStatus: $('#privacy-status option:selected').text(),
+                        privacyStatus: "public",
                         embeddable: true
                     }
                 };
                 var uploader = new MediaUploader({
                     baseUrl: 'https://www.googleapis.com/upload/youtube/v3/videos',
-                    file: file[0],
+                    file: file,
                     token: this.accessToken,
                     metadata: metadata,
                     params: {
@@ -296,8 +287,25 @@ angular.module('youtubeVideo', [
             };
 
             UploadVideo.prototype.handleUploadClicked = function() {
-                setStatus(status.uploading);
-                this.uploadFile($scope.videoFile);
+
+                if ($scope.videoTitle == "") {
+                    $alert({
+                        content: "Please enter a title for your video.",
+                        placement: 'top-right',
+                        type: 'danger',
+                        duration: 3
+                    });
+                } else if ($scope.videoDesc == "") {
+                    $alert({
+                        content: "Please enter a description for your video.",
+                        placement: 'top-right',
+                        type: 'danger',
+                        duration: 3
+                    });
+                } else {
+                    setStatus(status.uploading);
+                    this.uploadFile($scope.videoFile);
+                }
             };
 
             UploadVideo.prototype.pollForVideoStatus = function() {

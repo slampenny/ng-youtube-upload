@@ -1,36 +1,14 @@
 <div class="post-sign-in">
     <div>
-        <img id="channel-thumbnail">
-        <span id="channel-name"></span>
-    </div>
-
-    <div data-ng-show="showTitle">
-        <label for="title">Title:</label>
-        <input id="title" type="text" data-ng-model="title">
-    </div>
-    <div data-ng-show="showDescription">
-        <label for="description">Description:</label>
-        <textarea id="description" data-ng-model="description"></textarea>
-    </div>
-    <div data-ng-show="showPrivacy">
-        <label for="privacy-status">Privacy Status:</label>
-        <select id="privacy-status">
-            <option>public</option>
-            <option>unlisted</option>
-            <option>private</option>
-        </select>
-    </div>
-
-    <div>
         <div class='row' style="padding-top: 15px;">
             <div class ='col-md-12'>
-                <div class="form-group drop-box"
+                <div class="form-group drop-box" style="padding-top: 10px;height:100px;"
                      ngf-drop
-                     data-ng-model="videoFile"
+                     data-ng-model="videoFiles"
                      ngf-accept="'video/*'"
                      ngf-drag-over-class="dragover"
+                     ngf-multiple="false"
                         >
-                    <h4>{{videoTitle}}</h4>
                     <p>Choose a video from your computer: .MOV, .MPEG4, MP4, .AVI, .WMV, .MPEGPS, .FLV, 3GPP, WebM</p>
                 </div>
                 <div ngf-no-file-drop>File Drag/drop is not supported</div>
@@ -40,11 +18,11 @@
         <div class="btn-group-vertical">
             <div class="input-group">
                 <span class="input-group-btn">
-                    <span class="btn btn-primary btn-file">
-                       <span class="glyphicon glyphicon-folder-open"></span> Browse <input type="file" id="file" class="file" accept="video/*" ngf-select data-ng-model="videoFile">
+                    <span class="btn btn-primary btn-file" >
+                       <span class="glyphicon glyphicon-folder-open"></span> Browse <input type="file" id="file" class="file" accept="video/*" onchange="angular.element(this).scope().fileNameChanged(this)">
                     </span>
                 </span>
-                <input type="text" class="form-control" readonly value="{{videoName}}">
+                <input type="text" name="videoName" class="form-control" readonly value="{{videoName}}">
             </div>
             <button type="button" id="uploadButton" class="btn btn-success"><span class="glyphicon glyphicon-upload"></span> Upload Video</button>
         </div>
@@ -58,7 +36,7 @@
             </div>
 
             <div align="center" class="embed-responsive embed-responsive-16by9">
-                <video controls ngf-src="videoFile[0]" ngf-accept="'video/*'"></video>
+                <video controls ngf-src="videoFile" ngf-accept="'video/*'"></video>
             </div>
         </div>
         <p><small id="disclaimer">* By uploading a video, you certify that you own all rights to the content or that you are
