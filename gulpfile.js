@@ -1,9 +1,3 @@
-var gulp = require('gulp');
-
-var clean = require('gulp-clean');
-/*var jshint = require('gulp-jshint');
-var uglify = require('gulp-uglify');
-var concat = require('gulp-concat');*/
 
 var bases = {
     app: 'app/',
@@ -16,26 +10,27 @@ var paths = {
     css: bases.app + 'upload_video.css'
 };
 
-gulp.task('clean', function() {
-    return gulp.src(bases.dist)
-        .pipe(clean());
-});
+var gulp = require('gulp');
+var uglify = require('gulp-uglify');
+var concat = require('gulp-concat');
+var compress = require('compression');
+var jsValidate = require('gulp-jsvalidate');
 
-
-/*gulp.task('scripts', function() {
+gulp.task('validate', function () {
     return gulp.src(paths.scripts)
-        .pipe(jshint())
-        .pipe(jshint.reporter('default'))
-        .pipe(uglify())
-        .pipe(concat('upload_video.min.js'))
-        .pipe(gulp.dest(bases.dist));
+        .pipe(jsValidate());
 });
 
-gulp.task('copy', function() {
-    // copy html
-    gulp.src(paths.html)
-        .pipe(gulp.dest(bases.dist));
-});*/
+gulp.task('compress', function() {
+    gulp.src([
+        paths.scripts,
+        paths.html,
+        paths.css
+    ])
+        .pipe(concat('upload_video.min.js'))
+        .pipe(uglify())
+        .pipe(gulp.dest('dist'));
+});
 
-gulp.task('default', ['clean'/*, 'scripts', 'copy'*/]);
+gulp.task('default', ['validate', 'compress']);
 
