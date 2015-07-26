@@ -15,4 +15,4 @@ An Angular wrapper on the [YouTube v3 API](https://developers.google.com/youtube
 
  - Then simply use the directive in a template. "clientid" is your App's YouTube Client API which you can find [here](https://developers.google.com/youtube/registering_an_application):
 
-        <div youtube-video-upload clientid="YOUR CLIENT ID"></div>
+        <div youtube-video-upload clientid="YOUR CLIENT ID" data-video-title="{{name}}" data-video-desc="{{desc}}"></div>

@@ -6,7 +6,9 @@
     "Jordan Lapp"
   ],
   "dependencies": {
-    "ng-file-upload": "~5.0.3"
+    "ng-file-upload": "~5.0.3",
+    "angular-strap": "~2.1.6",
+    "angular": "1.4.1"
   },
   "description": "An Angular wrapper for uploading videos to YouTube using API v3",
   "main": "app/upload_video.js",
