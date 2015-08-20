@@ -1,7 +1,7 @@
 /**~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Youtube Upload Directive -
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-angular.module('youtubeVideo', [
+angular.module('ngYoutubeUpload', [
     'ngAnimate',
     'ngFileUpload',
     'mgcrea.ngStrap'
@@ -9,7 +9,7 @@ angular.module('youtubeVideo', [
     .run(['$window', '$rootScope', function ($window, $rootScope) {
 
         if (!angular.element('link#youtubeVideoCSS').length) {
-            angular.element('head').append('<link id="youtubeVideoCSS" href="../js/youtubeVideo/app/upload_video.css" rel="stylesheet">');
+            angular.element('head').append('<style id="youtubeVideoCSS">#channel-image{width:2em;height:2em;vertical-align:middle}#channel-name{margin-left:.2em;margin-right:.2em}#disclaimer{font-size:.75em;color:#aeaeae;max-width:350px}body{font-family:"Open Sans",sans-serif;font-size:1.5em}.post-sign-in{display:none}.during-upload{display:none}.post-upload{display:none}label{display:block}progress{font-size:.75em;width:15em;margin-bottom:1em;padding:.5em;font-family:"Open Sans",sans-serif}textarea{height:7em}.btn-file{position:relative;overflow:hidden}.btn-file input[type=file]{position:absolute;top:0;right:0;min-width:100%;min-height:100%;font-size:100px;text-align:right;filter:alpha(opacity=0);opacity:0;outline:none;background:#fff;cursor:inherit;display:block}</style>');
         }
 
         $window.signinCallback = function (authResult) {
@@ -21,12 +21,12 @@ angular.module('youtubeVideo', [
         };
 
     }])
-    .directive('youtubeVideoUpload', ['$window', '$alert', function ($window, $alert) {
+    .directive('ngYoutubeUpload', ['$window', '$alert', '$templateCache', function ($window, $alert, $templateCache) {
         'use strict';
 
         return {
             restrict: 'AE',
-            templateUrl: '../js/youtubeVideo/app/upload_video.html',
+            template: $templateCache.get("/templates/upload_video.html"),
             scope: {
                 videoTitle: "@",
                 videoDesc: "@"
