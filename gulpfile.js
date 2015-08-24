@@ -25,30 +25,27 @@ gulp.task('validate', function () {
 
 gulp.task('templates', function () {
     return gulp.src(paths.html)
-        .pipe(templates('templates.tmp', {
-            root: '/templates/',
-            module: pkg.name
-        }))
+        .pipe(templates('templates.tmp', {root: '/templates/', module: pkg.name}))
         .pipe(gulp.dest('.'));
 });
 
 gulp.task('concat', ['templates'], function () {
-    return gulp.src([pkg.main, 'templates.tmp'])
+    return gulp.src([bases.app + '*.js', 'templates.tmp'])
         .pipe(concat(pkg.name + '.js'))
         .pipe(gulp.dest('./dist/'));
 });
 
 gulp.task('clean', function (cb) {
-    del(['./*.tmp'], cb);
+    del(['*.tmp'], cb);
 });
 
 gulp.task('compress', function() {
     gulp.src(
-        paths.scripts
+        bases.app + pkg.name + '.js'
     )
-        .pipe(concat('ng-youtube-upload.min.js'))
-        .pipe(gulp.dest('dist'));
+        .pipe(compress(pkg.name + '.min.js'))
+        .pipe(gulp.dest('app'));
 });
 
-gulp.task('default', ['templates', 'concat', 'clean', 'validate', 'compress',]);
+gulp.task('default', ['templates', 'concat', 'clean', 'validate']);
 

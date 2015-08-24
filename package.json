@@ -2,7 +2,7 @@
   "name": "ng-youtube-upload",
   "version": "0.1.0",
   "description": "An Angular wrapper on the YouTube Upload API v3",
-  "main": "app/upload_video.js",
+  "main": "app/ng-youtube-upload.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/slampenny/ng-youtube-upload.git"

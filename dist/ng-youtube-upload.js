@@ -1,3 +1,287 @@
+/*
+ Copyright 2015 Google Inc. All Rights Reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+var DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v2/files/';
+
+
+/**
+ * Helper for implementing retries with backoff. Initial retry
+ * delay is 1 second, increasing by 2x (+jitter) for subsequent retries
+ *
+ * @constructor
+ */
+var RetryHandler = function() {
+    this.interval = 1000; // Start at one second
+    this.maxInterval = 60 * 1000; // Don't wait longer than a minute
+};
+
+/**
+ * Invoke the function after waiting
+ *
+ * @param {function} fn Function to invoke
+ */
+RetryHandler.prototype.retry = function(fn) {
+    setTimeout(fn, this.interval);
+    this.interval = this.nextInterval_();
+};
+
+/**
+ * Reset the counter (e.g. after successful request.)
+ */
+RetryHandler.prototype.reset = function() {
+    this.interval = 1000;
+};
+
+/**
+ * Calculate the next wait time.
+ * @return {number} Next wait interval, in milliseconds
+ *
+ * @private
+ */
+RetryHandler.prototype.nextInterval_ = function() {
+    var interval = this.interval * 2 + this.getRandomInt_(0, 1000);
+    return Math.min(interval, this.maxInterval);
+};
+
+/**
+ * Get a random int in the range of min to max. Used to add jitter to wait times.
+ *
+ * @param {number} min Lower bounds
+ * @param {number} max Upper bounds
+ * @private
+ */
+RetryHandler.prototype.getRandomInt_ = function(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
+
+/**
+ * Helper class for resumable uploads using XHR/CORS. Can upload any Blob-like item, whether
+ * files or in-memory constructs.
+ *
+ * @example
+ * var content = new Blob(["Hello world"], {"type": "text/plain"});
+ * var uploader = new MediaUploader({
+ *   file: content,
+ *   token: accessToken,
+ *   onComplete: function(data) { ... }
+ *   onError: function(data) { ... }
+ * });
+ * uploader.upload();
+ *
+ * @constructor
+ * @param {object} options Hash of options
+ * @param {string} options.token Access token
+ * @param {blob} options.file Blob-like item to upload
+ * @param {string} [options.fileId] ID of file if replacing
+ * @param {object} [options.params] Additional query parameters
+ * @param {string} [options.contentType] Content-type, if overriding the type of the blob.
+ * @param {object} [options.metadata] File metadata
+ * @param {function} [options.onComplete] Callback for when upload is complete
+ * @param {function} [options.onProgress] Callback for status for the in-progress upload
+ * @param {function} [options.onError] Callback if upload fails
+ */
+var MediaUploader = function(options) {
+    var noop = function() {};
+    this.file = options.file;
+    this.contentType = options.contentType || this.file.type || 'application/octet-stream';
+    this.metadata = options.metadata || {
+        'title': this.file.name,
+        'mimeType': this.contentType
+    };
+    this.token = options.token;
+    this.onComplete = options.onComplete || noop;
+    this.onProgress = options.onProgress || noop;
+    this.onError = options.onError || noop;
+    this.offset = options.offset || 0;
+    this.chunkSize = options.chunkSize || 0;
+    this.retryHandler = new RetryHandler();
+
+    this.url = options.url;
+    if (!this.url) {
+        var params = options.params || {};
+        params.uploadType = 'resumable';
+        this.url = this.buildUrl_(options.fileId, params, options.baseUrl);
+    }
+    this.httpMethod = options.fileId ? 'PUT' : 'POST';
+};
+
+/**
+ * Initiate the upload.
+ */
+MediaUploader.prototype.upload = function() {
+    var self = this;
+    var xhr = new XMLHttpRequest();
+
+    xhr.open(this.httpMethod, this.url, true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + this.token);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-Upload-Content-Length', this.file.size);
+    xhr.setRequestHeader('X-Upload-Content-Type', this.contentType);
+
+    xhr.onload = function(e) {
+        if (e.target.status < 400) {
+            var location = e.target.getResponseHeader('Location');
+            this.url = location;
+            this.sendFile_();
+        } else {
+            this.onUploadError_(e);
+        }
+    }.bind(this);
+    xhr.onerror = this.onUploadError_.bind(this);
+    xhr.send(JSON.stringify(this.metadata));
+};
+
+/**
+ * Send the actual file content.
+ *
+ * @private
+ */
+MediaUploader.prototype.sendFile_ = function() {
+    var content = this.file;
+    var end = this.file.size;
+
+    if (this.offset || this.chunkSize) {
+        // Only bother to slice the file if we're either resuming or uploading in chunks
+        if (this.chunkSize) {
+            end = Math.min(this.offset + this.chunkSize, this.file.size);
+        }
+        content = content.slice(this.offset, end);
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', this.url, true);
+    xhr.setRequestHeader('Content-Type', this.contentType);
+    xhr.setRequestHeader('Content-Range', 'bytes ' + this.offset + '-' + (end - 1) + '/' + this.file.size);
+    xhr.setRequestHeader('X-Upload-Content-Type', this.file.type);
+    if (xhr.upload) {
+        xhr.upload.addEventListener('progress', this.onProgress);
+    }
+    xhr.onload = this.onContentUploadSuccess_.bind(this);
+    xhr.onerror = this.onContentUploadError_.bind(this);
+    xhr.send(content);
+};
+
+/**
+ * Query for the state of the file for resumption.
+ *
+ * @private
+ */
+MediaUploader.prototype.resume_ = function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', this.url, true);
+    xhr.setRequestHeader('Content-Range', 'bytes */' + this.file.size);
+    xhr.setRequestHeader('X-Upload-Content-Type', this.file.type);
+    if (xhr.upload) {
+        xhr.upload.addEventListener('progress', this.onProgress);
+    }
+    xhr.onload = this.onContentUploadSuccess_.bind(this);
+    xhr.onerror = this.onContentUploadError_.bind(this);
+    xhr.send();
+};
+
+/**
+ * Extract the last saved range if available in the request.
+ *
+ * @param {XMLHttpRequest} xhr Request object
+ */
+MediaUploader.prototype.extractRange_ = function(xhr) {
+    var range = xhr.getResponseHeader('Range');
+    if (range) {
+        this.offset = parseInt(range.match(/\d+/g).pop(), 10) + 1;
+    }
+};
+
+/**
+ * Handle successful responses for uploads. Depending on the context,
+ * may continue with uploading the next chunk of the file or, if complete,
+ * invokes the caller's callback.
+ *
+ * @private
+ * @param {object} e XHR event
+ */
+MediaUploader.prototype.onContentUploadSuccess_ = function(e) {
+    if (e.target.status == 200 || e.target.status == 201) {
+        this.onComplete(e.target.response);
+    } else if (e.target.status == 308) {
+        this.extractRange_(e.target);
+        this.retryHandler.reset();
+        this.sendFile_();
+    }
+};
+
+/**
+ * Handles errors for uploads. Either retries or aborts depending
+ * on the error.
+ *
+ * @private
+ * @param {object} e XHR event
+ */
+MediaUploader.prototype.onContentUploadError_ = function(e) {
+    if (e.target.status && e.target.status < 500) {
+        this.onError(e.target.response);
+    } else {
+        this.retryHandler.retry(this.resume_.bind(this));
+    }
+};
+
+/**
+ * Handles errors for the initial request.
+ *
+ * @private
+ * @param {object} e XHR event
+ */
+MediaUploader.prototype.onUploadError_ = function(e) {
+    this.onError(e.target.response); // TODO - Retries for initial upload
+};
+
+/**
+ * Construct a query string from a hash/object
+ *
+ * @private
+ * @param {object} [params] Key/value pairs for query string
+ * @return {string} query string
+ */
+MediaUploader.prototype.buildQuery_ = function(params) {
+    params = params || {};
+    return Object.keys(params).map(function(key) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+    }).join('&');
+};
+
+/**
+ * Build the drive upload URL
+ *
+ * @private
+ * @param {string} [id] File ID if replacing
+ * @param {object} [params] Query parameters
+ * @return {string} URL
+ */
+MediaUploader.prototype.buildUrl_ = function(id, params, baseUrl) {
+    var url = baseUrl || DRIVE_UPLOAD_URL;
+    if (id) {
+        url += id;
+    }
+    var query = this.buildQuery_(params);
+    if (query) {
+        url += '?' + query;
+    }
+    return url;
+};
+
 /**~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Youtube Upload Directive -
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -357,3 +641,5 @@ angular.module('ng-youtube-upload', [
             }
         };
     }]);
+
+angular.module("ng-youtube-upload").run(["$templateCache", function($templateCache) {$templateCache.put("/templates/ng_youtube_upload.html","<div class=\"post-sign-in\">\r\n    <div>\r\n        <div class=\'row\' style=\"padding-top: 15px;\">\r\n            <div class =\'col-md-12\'>\r\n                <div class=\"form-group drop-box\" style=\"padding-top: 10px;height:100px;\"\r\n                     ngf-drop\r\n                     data-ng-model=\"videoFiles\"\r\n                     ngf-accept=\"\'video/*\'\"\r\n                     ngf-drag-over-class=\"dragover\"\r\n                     ngf-multiple=\"false\"\r\n                        >\r\n                    <p>Choose a video from your computer: .MOV, .MPEG4, MP4, .AVI, .WMV, .MPEGPS, .FLV, 3GPP, WebM</p>\r\n                </div>\r\n                <div ngf-no-file-drop>File Drag/drop is not supported</div>\r\n            </div>\r\n        </div>\r\n\r\n        <div class=\"btn-group-vertical\">\r\n            <div class=\"input-group\">\r\n                <span class=\"input-group-btn\">\r\n                    <span class=\"btn btn-primary btn-file\" >\r\n                       <span class=\"glyphicon glyphicon-folder-open\"></span> Browse <input type=\"file\" id=\"file\" class=\"file\" accept=\"video/*\" onchange=\"angular.element(this).scope().fileNameChanged(this)\">\r\n                    </span>\r\n                </span>\r\n                <input type=\"text\" name=\"videoName\" class=\"form-control\" readonly value=\"{{videoName}}\">\r\n            </div>\r\n            <button type=\"button\" id=\"uploadButton\" class=\"btn btn-success\" ng-disabled=\"videoName == \'\'\"><span class=\"glyphicon glyphicon-upload\"></span> Upload Video</button>\r\n        </div>\r\n\r\n        <div class=\"during-upload\">\r\n            <div class=\"progress\">\r\n                <div id=\"transferred\" class=\"progress-bar progress-bar-success\" role=\"progressbar\" aria-valuenow=\"{{progress.percentTransferred}}\"\r\n                     aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width:100%\">\r\n                    {{progress.percentTransferred}}% Complete (success)\r\n                </div>\r\n            </div>\r\n\r\n            <div align=\"center\" class=\"embed-responsive embed-responsive-16by9\">\r\n                <video controls ngf-src=\"videoFile\" ngf-accept=\"\'video/*\'\"></video>\r\n            </div>\r\n        </div>\r\n        <p><small id=\"disclaimer\">* By uploading a video, you certify that you own all rights to the content or that you are\r\n            authorized by the owner to make the content publicly available on YouTube, and that it otherwise complies\r\n            with the YouTube Terms of Service located at <a href=\"http://www.youtube.com/t/terms\" target=\"_blank\">http://www.youtube.com/t/terms</a>\r\n        </small></p>\r\n    </div>\r\n\r\n    <script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js\"></script>\r\n    <script src=\"//apis.google.com/js/client:plusone.js\"></script>\r\n</div>");}]);
