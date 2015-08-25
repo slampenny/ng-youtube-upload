@@ -1,12 +1,13 @@
 
 var bases = {
     app: 'app/',
-    dist: 'dist/'
+    dist: 'dist/',
+    templates: 'templates/'
 };
 
 var paths = {
-    scripts: [bases.app + 'ng_youtube_upload.js', bases.app + 'cors_upload.js', 'bower_components/ng-file-upload/ng-file-upload-all.min.js'],
-    html: bases.app + 'ng_youtube_upload.html'
+    scripts: [bases.app + 'ng-youtube-upload.js', bases.app + 'cors_upload.js', 'bower_components/ng-file-upload/ng-file-upload-all.min.js'],
+    html: bases.templates + 'ng-youtube-upload.html'
 };
 
 var gulp = require('gulp');
@@ -36,7 +37,7 @@ gulp.task('concat', ['templates'], function () {
 });
 
 gulp.task('clean', function (cb) {
-    del(['*.tmp'], cb);
+    del(['./*.tmp'], cb);
 });
 
 gulp.task('compress', function() {

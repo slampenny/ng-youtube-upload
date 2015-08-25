@@ -21,12 +21,12 @@ angular.module('ng-youtube-upload', [
         };
 
     }])
-    .directive('ng-youtube-upload', ['$window', '$alert', '$templateCache', function ($window, $alert, $templateCache) {
+    .directive('youtubeUploader', ['$window', '$alert', function ($window, $alert) {
         'use strict';
 
         return {
             restrict: 'AE',
-            template: $templateCache.get("/templates/upload_video.html"),
+            template: "/templates/ng-youtube-upload.html",
             scope: {
                 videoTitle: "@",
                 videoDesc: "@"
@@ -98,6 +98,7 @@ angular.module('ng-youtube-upload', [
                     }
                 });
 
+                $scope.displayUploader = false;
                 $scope.videoFile = null;
                 $scope.videoName = "";
 
@@ -141,6 +142,7 @@ angular.module('ng-youtube-upload', [
 
                 $scope.$on('event:google-plus-signin-success', function (event, authResult) {
                     $('#signInButton').hide();
+                    $scope.displayUploader = true;
                     if (authResult.access_token) {
                         var uploadVideo = new UploadVideo();
                         uploadVideo.ready(authResult.access_token);

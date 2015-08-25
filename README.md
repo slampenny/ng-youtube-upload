@@ -7,7 +7,7 @@ An Angular wrapper on the [YouTube v3 API](https://developers.google.com/youtube
 
 ## Usage
 
- - Include the `app/ng_youtube_upload.js` and `app/upload_video.html` files in your project.
+ - Include the `app/ng-youtube-upload.js` and `app/upload_video.html` files in your project.
 
  - Include ng-youtube-upload as a dependency for your Angular app:
 

@@ -1,4 +1,4 @@
-<div class="post-sign-in">
+<div data-ng-show="displayUploader">
     <div>
         <div class='row' style="padding-top: 15px;">
             <div class ='col-md-12'>
@@ -24,7 +24,7 @@
                 </span>
                 <input type="text" name="videoName" class="form-control" readonly value="{{videoName}}">
             </div>
-            <button type="button" id="uploadButton" class="btn btn-success" ng-disabled="videoName == ''"><span class="glyphicon glyphicon-upload"></span> Upload Video</button>
+            <button type="button" id="uploadButton" class="btn btn-success" data-ng-disabled="videoName == ''"><span class="glyphicon glyphicon-upload"></span> Upload Video</button>
         </div>
 
         <div class="during-upload">
