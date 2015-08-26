@@ -143,6 +143,7 @@ angular.module('ng-youtube-upload', [
                 $scope.$on('event:google-plus-signin-success', function (event, authResult) {
                     $('#signInButton').hide();
                     $scope.displayUploader = true;
+                    $scope.$apply();
                     if (authResult.access_token) {
                         var uploadVideo = new UploadVideo();
                         uploadVideo.ready(authResult.access_token);
