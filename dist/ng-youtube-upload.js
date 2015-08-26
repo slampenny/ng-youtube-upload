@@ -310,7 +310,7 @@ angular.module('ng-youtube-upload', [
 
         return {
             restrict: 'AE',
-            template: "/templates/ng-youtube-upload.html",
+            templateUrl: "/templates/ng-youtube-upload.html",
             scope: {
                 videoTitle: "@",
                 videoDesc: "@"
